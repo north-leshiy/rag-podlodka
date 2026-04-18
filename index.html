@@ -15,18 +15,18 @@
 <body class="shower list">
 
     <header class="caption">
-        <h1>RAG для лидов: архитектура и практика внедрения в реальные проекты</h1>
+        <h1>Архитектура и практика внедрения RAG в реальные проекты на PHP</h1>
     </header>
 
     <section class="slide slide-first clear">
-        <h2>
-        <div class="main-title">RAG для лидов</div>
-            архитектура и практика внедрения <br> в реальные проекты</h2>
+<!--        <h2>-->
+<!--        <div class="main-title">RAG для лидов</div>-->
+<!--            архитектура и практика внедрения <br> в реальные проекты</h2>-->
 
-        <br>
-        <br>
-        <p class="author">Поддубный Иван</p>
-        <p class="company">CTO Вебпрактик</p>
+<!--        <br>-->
+<!--        <br>-->
+<!--        <p class="author">Поддубный Иван</p>-->
+<!--        <p class="company">CTO Вебпрактик</p>-->
     </section>
 
     <section class="slide light">
@@ -64,33 +64,16 @@
     </section>
 
     <section class="slide light">
-        <h2>Почему мы говорим о RAG <br> на конференции для ТехЛидов</h2>
+        <h2>Почему важно знать о RAG</h2>
         <ul>
             <li>RAG &mdash; это архитектурный паттерн</li>
-            <li class="next">RAG будет внедряться в большое количество <br> приложений и процессов в ближайшие годы</li>
-            <li class="next">Лиды должны понимать, как это устроено и как встраивать этот паттерн в свои приложения и ландшафт</li>
-<!--            <li class="next">управление контекстом &mdash; одна из самых важных инженерных задач, <br> которую нам всем предстоит решать в ближайшие годы</li>-->
-        </ul>
-    </section>
-
-    <section class="slide light">
-        <h2>RAG: AI-инженеры vs программисты</h2>
-        <ul>
-            <li>У кого в команде есть AI-инженеры?</li>
-            <li class="next">На мой взгляд, их будет становиться больше в 2026-м году, спрос будет расти</li>
-            <li class="next">Сложные RAG-системы в сложных тематиках — скорее удел AI-инженеров</li>
-            <li class="next">Простые RAG-системы чаще всего будут реализовывать обычные разработчики или аналитики в nocode-режиме</li>
-            <li class="next">Пайплайны обработки данных также часто будут пилить обычные разработчики</li>
-            <li class="next">Лиды должны этим процессом управлять</li>
+            <li class="next">RAG/Векторый поиск будет внедряться в большое количество <br> приложений и процессов в ближайшие годы</li>
+            <li class="next">Инженеры должны понимать, как это устроено и как встраивать этот паттерн в свои приложения и ландшафт</li>
         </ul>
     </section>
 
     <section class="slide light">
         <h2 class="shout left">В чьих <mark>ПРОЕКТАХ</mark> уже внедряются LLM или планируются в обозримом будущем?</h2>
-    </section>
-
-    <section class="slide light">
-        <h2 class="shout left">В чьих <mark>ПРОЦЕССАХ</mark> уже внедряются LLM или планируются в обозримом будущем?</h2>
     </section>
 
     <section class="slide light">
@@ -186,7 +169,7 @@
     </section>
 
     <section class="slide light">
-        <h2>Типовые источники</h2>
+        <h2>Типовые внешние источники для контекста</h2>
         <ol>
             <li>
                 <b>SQL-/NoSQL базы данных</b>
@@ -259,21 +242,21 @@
         <h2 class="shout">Кейсы RAG</h2>
     </section>
 
-    <section class="slide light">
-        <h2>Кодовые агенты и автоматический Code Review</h2>
+<!--    <section class="slide light">-->
+<!--        <h2>Кодовые агенты и автоматический Code Review</h2>-->
 
-        <blockquote>
-            <p>RAG помогает LLM ориентироваться в больших кодовых базах и документации.</p>
-        </blockquote>
+<!--        <blockquote>-->
+<!--            <p>RAG помогает LLM ориентироваться в больших кодовых базах и документации.</p>-->
+<!--        </blockquote>-->
 
-        <b>Примеры:</b>
-        <ul>
-            <li>Sourcegraph Cody, Copilot X — ищут нужные фрагменты кода перед генерацией.</li>
-            <li>Code Review ассистенты — ищут похожие паттерны, стандарты и примеры в репозитории.</li>
-        </ul>
+<!--        <b>Примеры:</b>-->
+<!--        <ul>-->
+<!--            <li>Sourcegraph Cody, Copilot X — ищут нужные фрагменты кода перед генерацией.</li>-->
+<!--            <li>Code Review ассистенты — ищут похожие паттерны, стандарты и примеры в репозитории.</li>-->
+<!--        </ul>-->
 
-        <p><b>Ценность:</b> релевантные подсказки, меньше ошибок, ускорение ревью и онбординга.</p>
-    </section>
+<!--        <p><b>Ценность:</b> релевантные подсказки, меньше ошибок, ускорение ревью и онбординга.</p>-->
+<!--    </section>-->
 
     <section class="slide light">
         <h2>Быстрое извлечение знаний из корпоративных баз</h2>
@@ -341,8 +324,8 @@
         <ul class="place right top" style="margin: 120px 30px 0 0;">
             <li><img src="pictures/github_icon.png" style="width: 30px; vertical-align: middle;" alt=""> 35К звезд на гитхабе</li>
             <li>«Аналог Notion в open source»</li>
-            <li><b>Backend:</b> Nodejs</li>
-            <li><b>Frontend:</b> React</li>
+<!--            <li><b>Backend:</b> Nodejs</li>-->
+<!--            <li><b>Frontend:</b> React</li>-->
             <li><b>DB:</b> PostgreSQL</li>
             <li>Markdown</li>
             <li>OSS: механизм AI отсутствует</li>
@@ -556,11 +539,18 @@
     <section class="slide light">
         <h2>Выбираем на чем писать пайплайн</h2>
         <ul>
-            <li>LangChain/LangGraph — канон для большинства AI/Agentic/RAG приложений. Python + порт в TS.</li>
-            <li class="next">+ LangFlow (визуализация и интеграция с библиотеками выше)</li>
-            <li class="next">Нишевое решение: pgai — библиотека с воркерами и очередями в postgresql</li>
-            <li class="next">Llamaindex — более узкое под RAG</li>
-            <li class="next">Nocode: n8n, dify, etc</li>
+            <li><s>Python: LangChain/LangGraph/Llamaindex</s></li>
+            <li class="next"><s>Nocode: n8n, dify, langflow, flowise, etc</s></li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем на чем писать пайплайн: PHP</h2>
+        <ul>
+            <li>Neuron 1.8K ⭐</li>
+            <li>LLPhant 1.5K ⭐</li>
+            <li>Laravel AI SDK 800 ⭐</li>
+            <li>custom (pgvector/pgvector-php)</li>
         </ul>
     </section>
 
@@ -588,7 +578,8 @@
                     <li>другие</li>
                 </ul>
             </li>
-            <li class="next">Чем делать: современный и быстрый: chonkie (python) или использовать сценарии выбранной базовой библиотеки пайплайна</li>
+            <li class="next">Чем делать: в php библиотеках нативных алгоритмов не так много, но базовые сценарии закрывает</li>
+            <li class="next">Нет markdown из коробки => benbjurstrom/markdown-object</li>
 <!--            <li>Нарезанные чанки храним отдельной таблицей: упростит тестирование и эксперименты</li>-->
         </ul>
     </section>
@@ -617,7 +608,7 @@
     </section>
 
     <section class="slide light">
-        <h2>LangChain + MarkDownSplitter</h2>
+        <h2>Делим на чанки </h2>
         <img src="pictures/main-retriever-chunking.drawio.svg" style="margin-top: 20px;" alt="">
     </section>
 
@@ -933,30 +924,31 @@
         <ul>
             <li>RAG &mdash; базовый паттерн в современном поиске и AI-приложениях</li>
             <li>Он не дает 100% точности, но имеет большой спектр практик для повышения качества</li>
-            <li>Простой RAG может сварить любой инженер на коленках, для сложных решений чаще понадобится опытный AI-инженер</li>
+            <li>Простой RAG может сварить любой инженер на коленках</li>
             <li>Нужны эксперименты: с моделями, размерами и алгоритмами чанков, нет гарантий, что точно все качественно сработает именно на ваших данных, в вашей доменной зоне</li>
             <li>Возможно, именно в вашем случае гибрид или старый добрый полнотекстовый поиск bm25 будет работать лучше. Или вам нужно переходить на более сложный графовый подход.</li>
         </ul>
     </section>
 
-    <section class="slide slide-final clear">
-        <h2 style="font-size: 45px;">Пожалуйста, оставьте <br> свой отзыв! <span style="font-weight: normal">---→</span></h2>
+    <section class="slide clear">
+        <h2 style="font-size: 45px; color: #fff">Спасибо, ваши вопросы!</h2>
+        <img src="/pictures/cover.jpg" alt="" class="cover">
+
+        <br>
+        <div style="line-height: 130%; font-size: 25px;  color: #fff"><b>Поддубный Иван</b></div>
+        <div style="line-height: 130%;  color: #fff">CTO Вебпрактик</div>
+        <div style="line-height: 180%;  color: #fff">@northleshiy</div>
 
 
-        <div style="line-height: 130%; font-size: 25px;"><b>Поддубный Иван</b></div>
-        <div style="line-height: 130%;">CTO Вебпрактик</div>
-        <div style="line-height: 180%;">@northleshiy</div>
-
-
-        <img
-            style="
-                margin-right: 30px;
-                margin-top: 30px;
-            "
-            class="place top right"
-            src="pictures/qr-code.svg"
-            width="300"
-            alt="">
+<!--        <img-->
+<!--            style="-->
+<!--                margin-right: 30px;-->
+<!--                margin-top: 30px;-->
+<!--            "-->
+<!--            class="place top right"-->
+<!--            src="pictures/qr-code.svg"-->
+<!--            width="300"-->
+<!--            alt="">-->
 
         <img
             style="
