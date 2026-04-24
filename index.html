@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>RAG для лидов: архитектура и практика внедрения в реальные проекты</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="shower/themes/ribbon/styles/styles.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="shortcut icon" href="./favicon.png">
+    <link rel="icon" type="icon" href="./favicon.png">
+    <style>
+
+    </style>
+</head>
+<body class="shower list">
+
+    <header class="caption">
+        <h1>Архитектура и практика внедрения RAG в реальные проекты на PHP</h1>
+    </header>
+
+    <section class="slide slide-first clear">
+<!--        <h2>-->
+<!--        <div class="main-title">RAG для лидов</div>-->
+<!--            архитектура и практика внедрения <br> в реальные проекты</h2>-->
+
+<!--        <br>-->
+<!--        <br>-->
+<!--        <p class="author">Поддубный Иван</p>-->
+<!--        <p class="company">CTO Вебпрактик</p>-->
+    </section>
+
+    <section class="slide light">
+        <h2>Кто я 👨‍💻</h2>
+        <ol>
+            <li>15+ лет в IT (web). Прошел путь fullstack, teamlead</li>
+            <li>Работаю CTO в Вебпрактик (150+)</li>
+            <li>Член программного комитета:
+                <ul>
+                    <li>TechLead Conf</li>
+                    <li>CTO Conf</li>
+                    <li>Podlodka Crew</li>
+                    <li>ПыхКонф</li>
+                </ul>
+            </li>
+            <li>Организатор Ростовского PHP-сообщества (~500 человек)</li>
+            <li>Люблю Linux, open source</li>
+        </ol>
+
+    </section>
+
+    <section class="slide clear">
+        <h2 style="font-size: 37px;">Вебпрактик &mdash; веб-интегратор для корпораций</h2>
+        <img class="cover" src="pictures/clients.svg" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>О чем поговорим</h2>
+        <ul>
+            <li>Зачем нужен RAG</li>
+            <li>Практика внедрения на примере интеграции в базу знаний</li>
+            <li>Разберемся, что такое векторный поиск</li>
+            <li>Поговорим о расширенных практиках</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Почему важно знать о RAG</h2>
+        <ul>
+            <li>RAG &mdash; это архитектурный паттерн</li>
+            <li class="next">RAG/Векторый поиск будет внедряться в большое количество <br> приложений и процессов в ближайшие годы: поиск, асистенты по лексике, заполнение карточек товаров, обработка заявок и прочее.</li>
+            <li class="next">Инженеры должны понимать, как это устроено и как встраивать этот паттерн в свои приложения и ландшафт</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2 class="shout left">В чьих <mark>ПРОЕКТАХ</mark> уже внедряются LLM или планируются в обозримом будущем?</h2>
+    </section>
+
+    <!--section class="slide light">
+        <h2 class="shout left">Кто знает, как строятся RAG-системы?</h2>
+    </section-->
+
+    <section class="slide light">
+        <h2 class="shout left">Кто внедрял уже RAG в свои проекты?</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Цели доклада</h2>
+        <ul>
+            <li>В докладе мы лишь мельком затрагиваем продвинутые техники</li>
+            <li class="next">Заложить понимание архитектуры и основных вариантов решений</li>
+            <li class="next">Структурировать знания о RAG</li>
+            <li class="next">Дать понимание о точках роста и развитии RAG-систем</li>
+            <li class="next">Мы не опускаемся на уровень кода, остаемся на уровне архитектурных решений</li>
+        </ul>
+    </section>
+
+    <section class="slide section">
+        <h2 class="shout">Зачем нужен RAG</h2>
+    </section>
+
+    <section class="slide light">
+<!--        -&#45;&#45;-->
+<!--        config:-->
+<!--        layout: dagre-->
+<!--        -&#45;&#45;-->
+<!--        flowchart LR-->
+<!--        user["Пользователь"] &#45;&#45; запрос &ndash;&gt; app["Application"]-->
+<!--        app &ndash;&gt; promt["Промпт"]-->
+<!--        promt &ndash;&gt; llm["LLM (Модель)"]-->
+
+        <img src="pictures/user-llm.svg" class="place center" width="700" alt="">
+
+    </section>
+
+    <section class="slide light">
+        <h2>Проблема нехватки контекста</h2>
+        <ul>
+            <li>LLM обучена на старых данных.</li>
+            <li class="next">LLM не знает конкретно ваших данных <br> <i>(база знаний, информация о продуктах, о коде, о задачах, etc.)</i>.</li>
+            <li class="next">Нехватка контекста ведет к повышенным галлюцинациям.</li>
+            <li class="next"><b>Дообучать</b> модель сложно и дорого, к тому же данные могут быстро меняться.</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Нужен контекст</h2>
+<!--        -&#45;&#45;-->
+<!--        config:-->
+<!--        layout: dagre-->
+<!--        look: neo-->
+<!--        -&#45;&#45;-->
+<!--        flowchart LR-->
+<!--        subgraph promt["Промпт"]-->
+<!--        query["Запрос"]-->
+<!--        contenxt["Контекст"]-->
+<!--        end-->
+<!--        user["Пользователь"] &#45;&#45; запрос &ndash;&gt; app["Application"]-->
+<!--        app &ndash;&gt; promt-->
+<!--        promt &ndash;&gt; llm["LLM (Модель)"]-->
+<!--        style contenxt fill:#D50000,color:#FFFFFF-->
+
+
+        <img src="pictures/user-context-llm.svg" class="place center" width="700" alt="">
+    </section>
+
+
+    <section class="slide light">
+        <h2>Внешние сервисы как источник контекста</h2>
+<!--        -&#45;&#45;-->
+<!--        config:-->
+<!--        layout: elk-->
+<!--        look: neo-->
+<!--        -&#45;&#45;-->
+<!--        flowchart LR-->
+<!--        external["Внешний источник"]-->
+<!--        subgraph promt["Промпт"]-->
+<!--        query["Запрос"]-->
+<!--        contenxt["Контекст"]-->
+<!--        end-->
+<!--        user["Пользователь"] &#45;&#45; запрос &ndash;&gt; app["Application"]-->
+<!--        app &ndash;&gt; external-->
+<!--        app &ndash;&gt; promt-->
+<!--        promt &ndash;&gt; llm["LLM (Модель)"]-->
+
+<!--        style contenxt fill:#D50000,color:#FFFFFF-->
+<!--        style external fill:#2196F3,color:#FFFFFF-->
+
+        <img src="pictures/user-external-context-llm.svg" class="place center" width="700" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Типовые внешние источники для контекста</h2>
+        <ol>
+            <li>
+                <b>SQL-/NoSQL базы данных</b>
+                <ul>
+                    <li><i style="font-size: 16px">PostgreSQL, MySQL, MongoDB, DynamoDB.</i></li>
+                </ul>
+            </li>
+            <li class="next">
+                <b>Векторные базы</b>
+                <ul>
+                    <li><i style="font-size: 16px">Qdrant, Weaviate, Milvus, Postgres + pgvector.</i></li>
+                </ul>
+            </li>
+            <li class="next">
+                <b>API корпоративных систем</b>
+                <ul>
+                    <li><i style="font-size: 16px">CRM, ERP, Service Desk, TaskManager, etc.</i></li>
+                </ul>
+            </li>
+            <li class="next">
+                <b>Документы</b>
+                <ul>
+                    <li><i style="font-size: 16px">Текстовые файлы, PDF, Word, Excel, Markdown.</i></li>
+                    <li><i style="font-size: 16px">Вики/Knowledge Base — Confluence, Notion, SharePoint</i></li>
+                </ul>
+            </li>
+        </ol>
+    </section>
+
+    <section class="slide light">
+        <h2>RAG: retriever + generator</h2>
+        <!--        -&#45;&#45;-->
+        <!--        config:-->
+        <!--        layout: elk-->
+        <!--        -&#45;&#45;-->
+        <!--        flowchart LR-->
+        <!--        subgraph retriever["Retriever"]-->
+        <!--        external["Внешний источник"]-->
+        <!--        end-->
+        <!--        subgraph promt["Промпт"]-->
+        <!--        query["Запрос"]-->
+        <!--        contenxt["Контекст"]-->
+        <!--        end-->
+        <!--        subgraph generator["Generator"]-->
+        <!--        promt-->
+        <!--        llm["LLM (Модель)"]-->
+        <!--        end-->
+        <!--        user["Пользователь"] &#45;&#45; запрос &ndash;&gt; app["Application"]-->
+        <!--        app &ndash;&gt; retriever & generator-->
+        <!--        promt &ndash;&gt; llm-->
+        <!--        style external fill:#FFFFFF,color:#000000-->
+        <!--        style contenxt fill:#D50000,color:#FFFFFF-->
+        <!--        style retriever fill:#2962FF-->
+        <!--        style generator fill:#BBDEFB-->
+
+
+        <img src="pictures/retriever-generator.svg" class="place center" width="700" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Итого RAG</h2>
+        <ul>
+            <li>RAG = Retrieval-Augmented Generation.</li>
+            <li>Это подход/паттерн, при котором перед генерацией LLM достает нужные знания c помощью (Retriever), а потом использует их при ответе (Generator).</li>
+        </ul>
+    </section>
+
+
+    <section class="slide section">
+        <h2 class="shout">Кейсы RAG</h2>
+    </section>
+
+<!--    <section class="slide light">-->
+<!--        <h2>Кодовые агенты и автоматический Code Review</h2>-->
+
+<!--        <blockquote>-->
+<!--            <p>RAG помогает LLM ориентироваться в больших кодовых базах и документации.</p>-->
+<!--        </blockquote>-->
+
+<!--        <b>Примеры:</b>-->
+<!--        <ul>-->
+<!--            <li>Sourcegraph Cody, Copilot X — ищут нужные фрагменты кода перед генерацией.</li>-->
+<!--            <li>Code Review ассистенты — ищут похожие паттерны, стандарты и примеры в репозитории.</li>-->
+<!--        </ul>-->
+
+<!--        <p><b>Ценность:</b> релевантные подсказки, меньше ошибок, ускорение ревью и онбординга.</p>-->
+<!--    </section>-->
+
+
+    <section class="slide light">
+        <h2>Семантический поиск поверх существующих каталогов и баз контента</h2>
+        <p>Улучшенный поиск по смыслу, а не по ключевым словам.</p>
+        <p><b>Пример: </b>«Игровая видеокарта до 100 000 рублей» → агент ищет релевантные товары, даже если в описании нет слова «игровая», и дает продвинутые рекомендации на основе данных LLM.</p>
+        <p><b>Ценность: </b>повышает конверсию, улучшает UX, снижает количество «нулевых» поисковых запросов.</p>
+    </section>
+
+    <section class="slide light">
+        <h2>HelpDesk и поддержка клиентов</h2>
+        <p>Автоматизация ответов на основе внутренних документов, FAQ и тикетов.</p>
+        <p><b>Пример: </b>пользователь пишет «не могу войти в систему» — агент ищет инструкции и предлагает решение.</p>
+        <p><b>Ценность: </b>меньше обращений к операторам, стандартизированные ответы, круглосуточная поддержка.</p>
+    </section>
+
+    <section class="slide light">
+        <h2>Генерация контента</h2>
+        <p> Отзывы, комментарии, тикеты — извлечение тем, тональности, повторяющихся проблем.</p>
+        <ul>
+            <li> Отзывы, комментарии, тикеты — извлечение тем, тональности, повторяющихся проблем.</li>
+            <li>Юридическая аналитика: поиск и извлечение условий, сроков, рисков.</li>
+            <li>Научно-техническая аналитика: формирование обзора технологий и трендов.</li>
+        </ul>
+        <p><b>Ценность: </b>экономия часов экспертов, быстрые инсайты, поддержка решений.</p>
+    </section>
+
+    <section class="slide light">
+        <h2>Аналитика, валидация пользовательского контента</h2>
+        <ul>
+            <li>Отзывы, комментарии, тикеты — извлечение тем, тональности, повторяющихся проблем.</li>
+            <li>Ассистенты по нормативке и compliance.</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Быстрое извлечение знаний из корпоративных баз</h2>
+        <p>Поиск информации в wiki, Confluence, Jira, Google Docs, email и др.</p>
+        <p><b>Пример: </b>инженер спрашивает: «Как обновить staging?» — агент достаёт инструкцию из внутренней базы.</p>
+        <p><b>Ценность: </b>мгновенный доступ к актуальным знаниям, сокращение времени поиска, снижение зависимости от «носителей знаний».</p>
+    </section>
+
+
+    <section class="slide section">
+        <h2 class="shout">Погружение на примере внедрения RAG в базу знаний</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Вводные</h2>
+        <ul>
+            <li>ИТ компания - 150 человек</li>
+            <li>Есть корпоративная база знаний в outline (open source)</li>
+            <li>3000 документов (статей)</li>
+            <li>Хотим улучшить качество получения информации из базы знаний
+                <ul>
+                    <li>Ответы корпоративного чат-бота на вопросы из БЗ</li>
+                    <li>Поиск внутри БЗ должен поддерживать AI-агрегацию (как в гугле)</li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Ограничения</h2>
+        <ul>
+            <li>Должны учитываться права доступа к базе знаний</li>
+            <li>Предотвращение утечки чувствительных данных</li>
+            <!-- @todo -->
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Outline</h2>
+        <ul class="place right top" style="margin: 120px 30px 0 0;">
+            <li><img src="pictures/github_icon.png" style="width: 30px; vertical-align: middle;" alt=""> 35К звезд на гитхабе</li>
+            <li>«Аналог Notion в open source»</li>
+<!--            <li><b>Backend:</b> Nodejs</li>-->
+<!--            <li><b>Frontend:</b> React</li>-->
+            <li><b>DB:</b> PostgreSQL</li>
+            <li>Markdown</li>
+            <li>OSS: механизм AI отсутствует</li>
+        </ul>
+        <img src="pictures/outline-screen.png" alt=""
+            style="width: 600px; border: 1px solid gray;"
+        >
+    </section>
+
+    <section class="slide light">
+        <h2>Примеры запросов:</h2>
+        <ul>
+            <li>Как повысить грейд</li>
+            <li>В какие числа выплачивается ЗП</li>
+            <li>Как зарелизить проект x</li>
+        </ul>
+    </section>
+
+    <section class="slide section">
+        <h2 class="shout">Проектируем Retriever</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Проектируем Retriever</h2>
+        <img src="pictures/main-retriever.drawio.svg" alt="">
+    </section>
+
+<!--    <section class="slide light">-->
+<!--        <h2>Архитектурные вопросы:</h2>-->
+<!--        <table>-->
+<!--            <tbody>-->
+<!--                <tr>-->
+<!--                    <td>1. Способ выборки информации</td>-->
+<!--                    <td>?</td>-->
+<!--                </tr>-->
+<!--                <tr>-->
+<!--                    <td>2. Место хранения индексов/векторов</td>-->
+<!--                    <td>?</td>-->
+<!--                </tr>-->
+<!--                <tr>-->
+<!--                    <td>3. Способ нарезки на чанки</td>-->
+<!--                    <td>?</td>-->
+<!--                </tr>-->
+<!--                <tr>-->
+<!--                    <td>4. Embedding model / размерность векторов</td>-->
+<!--                    <td>?</td>-->
+<!--                </tr>-->
+<!--                <tr>-->
+<!--                    <td>5. Инструмент управления пайплайном</td>-->
+<!--                    <td>?</td>-->
+<!--                </tr>-->
+<!--            </tbody>-->
+<!--        </table>-->
+<!--    </section>-->
+
+    <section class="slide light">
+        <h2>Выбираем способ выборки информации</h2>
+        <ul>
+            <li>Полнотекстовый поиск</li>
+            <li>Векторный поиск</li>
+            <li>Гибрид (вектор + полнотекстовый)</li>
+            <li>Через графовые БД *</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Векторный поиск на пальцах</h2>
+        <img src="./pictures/main-ETL-to-vector-storage.drawio.svg" width="680" alt="">
+    </section>
+
+
+    <section class="slide light">
+        <h2>Векторный поиск на пальцах</h2>
+        <img src="./pictures/main-vector-search.drawio.svg" width="680" alt="">
+    </section>
+
+    <section class="slide light">
+        <ul style="position: relative; z-index: 1;">
+            <li>Для трансформации text -> embedding нужно использовать Embedding Model</li>
+            <li class="next">Вектор: набор чисел</li>
+            <li class="next">Размерность векторов может быть разная: 384, 768, 1536, 3к+</li>
+            <li class="next">Векторы, как правило, весят в несколько раз больше чем исходный текст</li>
+            <li class="next">Векторизировать можно не только текст</li>
+        </ul>
+        <img src="pictures/How-Embeddings-Work.jpg" style="width: 700px; margin-top: -40px;" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2 style="font-size: 39px;">Векторная БД не является источником истины</h2>
+        <ul>
+            <li>Векторная БД хранит только: embedding, ID, metadata</li>
+            <li class="next">Можно менять модель и пересчитывать векторы</li>
+            <li class="next">Нужен пайплайн для трансформации и поддержания актуальности относительно источника</li>
+<!-- @todo
+{
+  "id": "doc_123",
+  "vector": [0.1, 0.2, ...],  // 768 чисел
+  "metadata": {
+    "text": "Полный текст документа или чанка",  // ← оригинал здесь
+    "title": "Название",
+    "date": "2025-07-05",
+    "category": "tech"
+  }
+}
+-->
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Почему мы выбрали векторный поиск</h2>
+        <ul>
+            <li>Полнотекстовый поиск: были проблемы</li>
+            <li>Векторный поиск: было ожидание, что качество будет выше, чем допиленный полнотекстовый</li>
+            <li>Возможно, вернемся к гибриду в дальнейшем</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Адаптируем схему под векторный поиск</h2>
+        <img src="pictures/main-retriever-vector.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем хранилище векторов (embedding)</h2>
+        <ul>
+            <li>Внешняя векторная База</li>
+            <li>Расширения postgres: pgvector pgvectorscale</li>
+        </ul>
+<!-- @todo https://habr.com/ru/articles/961088/ -->
+    </section>
+
+    <section class="slide light">
+        <h2>Внешняя Векторная БД</h2>
+        <ul>
+            <li>Большой выбор open source решений с объемами векторов от 1M до 1B+.
+                <br><a href="https://habr.com/ru/articles/961088/">Отличный обзор</a>.</li>
+            <li>Доп расходы на инфраструктуру, более сложный пайплайн синхронизации</li>
+            <li>В большинстве случаев лучше скорость</li>
+            <li>Лучше когда несколько источников</li>
+        </ul>
+        <!--        @todo логотипы векторных баз данных -->
+    </section>
+
+    <section class="slide light">
+        <h2>PostgreSQL расширение (наш выбор)</h2>
+        <ul>
+            <li>Минусы: медленная индексация</li>
+            <li>Плюсы: нет доп. затрат на инфру, быстро начать</li>
+            <li>От 1-10M pgvector до 100M pgvectorscale</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Индексы</h2>
+        <ul>
+            <li>HNSW</li>
+            <li>IVFFlat</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Алгоритмы сравнения</h2>
+        <ul>
+            <li>Косинусное сходство (лучше для текстов)</li>
+            <li>L2/Евклидово расстояние (лучше для изображений, координат)</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>PostgreSQL расширение (наш выбор)</h2>
+        <img src="pictures/main-retriever-vector.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем Embedding model (encoder)</h2>
+        <p>Факты про Embedding model:</p>
+        <ul>
+            <li>Embedding model != LLM</li>
+            <li class="next">Embedding model на основе весов LLM</li>
+            <li class="next">Embedding model обычно выбирают меньшей по размерам, чем LLM</li>
+            <li class="next">От модели может сильно зависеть качество</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем Embedding model (encoder)</h2>
+        <ul>
+            <li>Базово выбираем по Massive Text Embedding Benchmark (MTEB) / ruMTEB</li>
+            <li class="next">Проверяем на своем конкретном случае</li>
+            <li class="next">Есть много моделей, которые могут запускать не в VRAM и потребляют достаточно немного</li>
+            <li class="next">Специфика домена: для юридического, медицинского, многоязычного или кода — лучше использовать специализированные модели</li>
+            <li class="next">Для стартапа и небольшого объема можно стартовать с облачными</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем Embedding model (наш выбор)</h2>
+        <p><b>OpenAI text-embedding-3-small 1536</b></p>
+        <ul>
+            <li>Затраты не велики на наших объемах</li>
+            <li>Позже можно будет заморочиться и протестировать локальные</li>
+            <li>Недавно вышел неплохой обзор open source русскоязычных embedding-моделей (https://habr.com/ru/articles/961972/)</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем Embedding модель (наш выбор)</h2>
+        <img src="pictures/main-retriever-chunking.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем на чем писать пайплайн</h2>
+        <ul>
+            <li><s>Python: LangChain/LangGraph/Llamaindex</s></li>
+            <li class="next"><s>Nocode: n8n, dify, langflow, flowise, etc</s></li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выбираем на чем писать пайплайн: PHP</h2>
+        <ul>
+            <li>Neuron 1.8K ⭐</li>
+            <li>LLPhant 1.5K ⭐</li>
+            <li>Laravel AI SDK 800 ⭐</li>
+            <li>custom (pgvector/pgvector-php/openai-sdk)</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Neuron (наш выбор)</h2>
+        <img src="pictures/main-retriever-langchain.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+    <section class="slide small-text">
+        <h2>Чанкинг</h2>
+        <style>
+            .small-text ul li {
+	            font-size: 18px;
+            }
+        </style>
+        <ul>
+            <li>Тексты нужно бить на чанки, иначе будет размываться смысл и падать качество</li>
+            <li class="next">Есть куча алгоритмов-сплиттеров:
+                <ul>
+                    <li><s>по размеру</s></li>
+                    <li>по заголовкам Markdown: сначала сегментация по #, ##, ### с сохранением иерархического контекста, затем ограничение длины внутри секции</li>
+                    <li>специальный сплиттеры для таблиц</li>
+                    <li>семантическое разбиение с помощью LLM</li>
+                    <li>двухпроходная обработка и объединение: после первичной нарезки выполняют пост‑обработку — merge слишком маленьких чанков, добавление перекрытий или контекстных префиксов</li>
+                    <li>другие</li>
+                </ul>
+            </li>
+            <li class="next">Чем делать: в php библиотеках нативных алгоритмов не так много, но базовые сценарии закрывает</li>
+            <li class="next">Нет markdown из коробки => benbjurstrom/markdown-object</li>
+<!--            <li>Нарезанные чанки храним отдельной таблицей: упростит тестирование и эксперименты</li>-->
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Осмысленный чанкинг</h2>
+        <ol>
+            <li>Бизнес анализ: понимания доменную область разбивать чанки на необходимые сущности.</li>
+            <li class="next">Спрашиваем у LLM на какие основные вопросы отвечает этот текст. Бьем по границам вопросов.
+                <ul>
+                    <li>Опционально: хранить в чанках только вопросы со ссылками на ответы.</li>
+                </ul>
+            </li>
+            <li class="next">Кейс: 80% на бизнес анализ и вычитку, переработку БЗ, 20% на разработку</li>
+        </ol>
+    </section>
+
+    <section class="slide light">
+        <h2>Метаданные у чанков</h2>
+        <p>Что можно хранить</p>
+        <ul>
+            <li>ACL (для быстрой фильтрации по правам)</li>
+            <li>section_path/title (для подсветки в UX)</li>
+            <li>Для векторных БД: chunkId, documentId, model/model_version</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Делим на чанки </h2>
+        <img src="pictures/main-retriever-chunking.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Фильтрация данных</h2>
+        <ul>
+            <li>В текстах могут быть данные, которые вы не хотите сливать <br> во внешние сервисы или внешние LLM.</li>
+            <li>Microsoft Presidio (python) <img src="pictures/github_icon.png" style="width: 30px; vertical-align: middle;" alt="">6К ⭐</li>
+        </ul>
+        <img src="pictures/presidio.gif" width="700" alt="">
+    </section>
+
+    <section class="slide light">
+        <h2>Обработка изменений</h2>
+        <p>Чтобы не блокировать поток вынесли в отдельную таблицу-очередь</p>
+        <ul>
+            <li>Разбиение на чанки</li>
+            <li>Векторизацию</li>
+        </ul>
+    </section>
+
+
+    <section class="slide light">
+        <h2>Retriever</h2>
+        <img src="pictures/main-retriever-filtering-presido.drawio.svg" style="margin-top: 20px;" alt="">
+    </section>
+
+<!--    <section class="slide light">-->
+<!--        <h2>Структура данных (упрощенно)</h2>-->
+<!--        <p>@todo показать схему</p>-->
+<!--    </section>-->
+
+
+    <section class="slide light">
+        <h2>Поиск</h2>
+        <ul>
+            <li>Выбираем по 4–5 чанков по 500 токенов каждый, суммарно до ~1.5–2k токенов контекста</li>
+            <li>Длинные окна не панацея: рост контекста ухудшает извлечение релевантных фактов и скорость</li>
+            <li>Передаем в промпт Генератора</li>
+        </ul>
+    </section>
+
+    <section class="slide section">
+        <h2 class="shout">Generator</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Generator</h2>
+        <ul>
+            <li>Температуру оставили низкой: 0.0-0.2</li>
+            <li>Явно говорим не переспрашивать, если не знаешь, и не фантазировать</li>
+            <li>Встраиваем источники со ссылками</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Generator: пример промпта</h2>
+        <figure>
+            <blockquote>
+                <p>СИСТЕМНОЕ ПРАВИЛО: <br>
+                   Ты — ассистент, отвечающий строго по предоставленным фрагментам компании.
+                   Если информации недостаточно — скажи, чего не хватает, и предложи уточняющие вопросы.
+                   Не фантазируй. Отвечай по-русски. В конце всегда приведи список источников с цитатами.</p>
+            </blockquote>
+        </figure>
+    </section>
+
+    <section class="slide light">
+        <h2>Generator: пример промпта</h2>
+        <figure>
+            <blockquote>
+                <p>ШАБЛОН ВВОДА: <br>
+                   [Вопрос пользователя] <br>
+                   {question} <br>
+                    <br>
+                   [Контекст — до {N} фрагментов, каждый с метаданными] <br>
+                   {context} <br>
+                   -- формат одного фрагмента: <br>
+                   ID: {doc_id} • Название: {title} • Раздел: {section_path} • Страница: {page} <br>
+                   Текст: """{snippet}"""</p>
+            </blockquote>
+        </figure>
+    </section>
+
+    <section class="slide light">
+        <h2>Generator: пример промпта</h2>
+        <figure>
+            <blockquote>
+                <p style="font-size: 17px;">[Требования к ответу]<br>
+                   - Ответь кратко и по делу (3–6 предложений), затем при необходимости дай пошаговые инструкции или список.<br>
+                   - Если есть противоречия между фрагментами — укажи их и выбери наиболее актуальный по дате/версии.<br>
+                   - Используй точные формулировки из фрагментов, но перефразируй, избегая дословных цитат.<br>
+                   - Вставляй цитаты на источники в формате [ID:строка/страница] после соответствующих фактов.<br>
+                    <br>
+                   [Формат вывода]<br>
+                   Ответ:<br>
+                   ...<br>
+                   Источники:<br>
+                   — {doc_id}:{page_or_line} — {title}</p>
+            </blockquote>
+        </figure>
+    </section>
+
+    <section class="slide section">
+        <h2 class="shout">Расширенные практики</h2>
+    </section>
+
+
+    <section class="slide light">
+        <h2>Query rewriting</h2>
+        <ul>
+            <li>Garbage in garbage out</li>
+            <li>Пропускаем через LLM, чтобы исправить коллизии или уточнить</li>
+            <li>Еще дальше: можно декомпозировать сложный запрос на подзапросы для многошагового поиска</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>HYDE — прием гипотетического ответа</h2>
+        <ul>
+            <li>С помощью LLM генерируем короткий ответ‑набросок на запрос</li>
+            <li>Именно его embedding используем для поиска ответа на вопрос</li>
+            <li>Снимает семантический разрыв «вопрос ↔ ответ»: большинство корпусов хранит ответы/факты, а не формулировки вопросов, поэтому embedding «гипотетического ответа» лучше совпадает с целевыми текстами с ответами</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Reranking</h2>
+        <ul>
+            <li>Выбираем топ-N кандидатов через вектор</li>
+            <li>Пропускаем через LLM, чтобы выбрать лучшие варианты относительно запроса</li>
+            <li>Отправляем в финальный промпт топ-K документов</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Context Window Enhancement</h2>
+        <ul>
+            <li>Выбираем соседние чанки из исходного документа для расширения контекста</li>
+            <li>Можно решать через overlap при формировании чанков</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>CAG - кешируем ответы</h2>
+        <ul>
+            <li>Формируем быстрый кеш из ответов</li>
+            <li>Создает нагрузку на объем контекста</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>RAG с памятью</h2>
+        <ul>
+            <li>Передаем в контекст не только текущий запрос пользователя, но и историю переписки</li>
+            <li>Историю можно суммаризировать, сокращая контекст</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Self RAG</h2>
+        <ul>
+            <li>Система гибко реагирует на запросы пользователя</li>
+            <li>Реализуется модуль маршрутизатора который <mark>Алгоритмически</mark> позволяет
+                <ul>
+                    <li>Переспросить</li>
+                    <li>Переформулировать вопрос</li>
+                    <li>Дернуть Retrieval</li>
+                    <li>Ответить сразу если контекста хватает</li>
+                    <li>etc</li>
+                </ul>
+            </li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Agentic RAG</h2>
+        <ul>
+            <li>Даем Агенту тулы для поиска информации (API, вектор, БД, внешний поиск).</li>
+            <li>Агент самостоятельно решает, где и как искать информацию, формулирует и корректирует запросы</li>
+            <li>Может переформулировать запрос, изменить источник или остановиться, когда набрал достаточно контекста.</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Графовые подходы: GraphRAG | Light RAG | etc</h2>
+        <ul>
+            <li>Представление индекса в виде графа знаний позволяет учитывать контекст и сложные связи между информацией, улучшая качество поиска и генерации.</li>
+
+            <li>Формирование графа автоматизированно, но требует ручной валидации, особенно в сложных областях</li>
+
+            <li>Сложнее и дороже во внедрении и обслуживании (на примере GraphRAG)</li>
+
+            <li>Активно развивается, и уже есть способы которые на объемах показывают кратное удешевление (Light RAG)</li>
+        </ul>
+    </section>
+
+
+    <section class="slide section">
+        <h2 class="shout">Про тестирование, эксперименты и метрики</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Golden dataset</h2>
+        <ul>
+            <li>Составляем таблицу вопрос и ответ который мы ожидаем</li>
+            <li>Ответы должны быть точными и полными, основаны на ваших данных, содержать ключевые факты</li>
+            <li>Заполняем небольшой датасет вопросов и ответов (можно начать с 20-30 штук, оптимально >100)</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Ручное тестирование: генератор</h2>
+        <p><b>Что тестируем: </b>Насколько сгенерированный ответ совпадает с ожидаемым</p>
+        <ul>
+            <li>Заносим в таблицу полученные ответы и сравниваем с эталонными</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Ручное тестирование: ретривер</h2>
+        Что тестируем:
+        <ul>
+            <li>Нашел ли ретривер все документы из базы?
+                <br>Можем дополнить golden dataset ссылками.
+            </li>
+            <li>Сколько нашел лишних?</li>
+        </ul>
+        Что делаем:
+        <ol>
+            <li>Пишем через AIшку небольшой скрипт который будет показывать:
+                <ul>
+                    <li>Найденные чанки на запрос</li>
+                    <li>% совпадения косинусного сходства</li>
+                </ul>
+            </li>
+            <li>Исследуем на % совпадения и корректность выдаваемых чанков во время поиска при экспериментах</li>
+        </ol>
+    </section>
+
+    <section class="slide light">
+        <h2>Наши эксперименты</h2>
+        <ul>
+            <li>На младшей модели OpenAI у нас большинство наших запросов было < 0.5 по совпадению с целевыми статьями. Повышение со small до large модели резко повысило качество.</li>
+            <li class="next">Уперлись в лимит по PostgreSQL, он не позволяет хранить векторы 2000. Сделали 2000, старшая модель позволяет понижать размерность вектора</li>
+            <li class="next">Экспериментировали с размером чанка, сделали его больше (500-1000)</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Подходим более профессионально</h2>
+        <p>RAGAS (python) — framework тестирования RAG-систем. Подключает внешнюю LLM для проверки корректности.</p>
+        <p>Базовые метрики:</p>
+        <ul>
+            <li>Faithfulness — не галлюцинирует ли модель (ответ основан на контексте)</li>
+            <li>Answer Relevancy — релевантен ли ответ вопросу</li>
+            <li>Context Precision — насколько точно выбраны контексты (релевантные в начале)</li>
+            <li>Context Recall — нашла ли система всю нужную информацию</li>
+            <li>Context Relevancy — насколько контекст релевантен вопросу</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>RAGAS</h2>
+        <ul>
+            <li>Чтобы сильно глубоко не погружаться в FW генерируем болванку скрипта через AI, правим точки вызова</li>
+            <li>Используем сильную ЛЛМ</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>RAGAS: пример оценки метрик</h2>
+        <code>
+        faithfulness....................... 0.8542 <br>
+        answer_relevancy.............. 0.7121 <br>
+        context_precision............... 0.6490 <br>
+        context_recall..................... 0.7234 <br>
+        context_relevancy.............. 0.8103
+        </code>
+
+        <p>Ведем табличку для метрик при разных экспериментах.</p>
+    </section>
+
+    <section class="slide light">
+        <h2>Что можно мерить в production</h2>
+        <ul>
+            <li>Latency (время ответа)</li>
+<!--            <li>Retrieval accuracy (находим нужные чанки?)</li>-->
+            <li>Cost per query</li>
+            <li>Количество случаев, когда не смогли ответить</li>
+        </ul>
+    </section>
+
+
+    <section class="slide section">
+        <h2 class="shout">Выводы</h2>
+    </section>
+
+    <section class="slide light">
+        <h2>Наши выводы и планы</h2>
+        <ul>
+            <li class="">Корпоративный бот по базе знаний выдает неплохой результат практически без улучшений.</li>
+            <li class="next">Думаем законтрибьютить наши доработки в форк для outline <br>
+                (есть ощущения что в основную ветку отклонят)
+            </li>
+            <li class="next">План расширить корпоративный RAG на TaskTracker, улучшать и расширять базу и поэксперементировать с RAG + mattermost.</li>
+            <li class="next">Внедряем двум нашим клиентам более продвинутые версии</li>
+        </ul>
+    </section>
+
+    <section class="slide light">
+        <h2>Выводы</h2>
+        <ul>
+            <li>RAG &mdash; базовый паттерн в современном поиске и AI-приложениях</li>
+            <li>Он не дает 100% точности, но имеет большой спектр практик для повышения качества</li>
+            <li>Простой RAG может сварить любой инженер на коленках</li>
+            <li>Нужны эксперименты: с моделями, размерами и алгоритмами чанков, нет гарантий, что точно все качественно сработает именно на ваших данных, в вашей доменной зоне</li>
+            <li>Возможно, именно в вашем случае гибрид или старый добрый полнотекстовый поиск bm25 будет работать лучше. Или вам нужно переходить на более сложный графовый подход.</li>
+        </ul>
+    </section>
+
+    <section class="slide clear">
+        <h2 style="font-size: 45px; color: #fff">Спасибо, ваши вопросы!</h2>
+        <img src="/pictures/cover.jpg" alt="" class="cover">
+
+        <br>
+        <div style="line-height: 130%; font-size: 25px;  color: #fff"><b>Поддубный Иван</b></div>
+        <div style="line-height: 130%;  color: #fff">CTO Вебпрактик</div>
+        <div style="line-height: 180%;  color: #fff">@northleshiy</div>
+
+
+<!--        <img-->
+<!--            style="-->
+<!--                margin-right: 30px;-->
+<!--                margin-top: 30px;-->
+<!--            "-->
+<!--            class="place top right"-->
+<!--            src="pictures/qr-code.svg"-->
+<!--            width="300"-->
+<!--            alt="">-->
+
+        <img
+            style="
+                margin-left: 30px;
+                margin-bottom: 30px;
+                width: 200px;
+            "
+            class="place left bottom"
+            src="pictures/qr-techlead-stream.png"
+            alt="">
+    </section>
+
+
+
+    <footer class="badge">
+        <a href="https://github.com/north-leshiy/rag-techlead">Fork me on GitHub</a>
+    </footer>
+
+    <div class="progress"></div>
+    <script src="shower/shower.js"></script>
+</body>
+</html>
